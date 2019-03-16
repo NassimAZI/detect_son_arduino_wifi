@@ -1,0 +1,52 @@
+//Code arduino pour capter du son et l'envoyé via le reseau (utilisation d'une carte wifi arduino)
+//le capteur arduino capte en continue le son 
+//en envoi la moyenne de 128 valeurs au serveur via le reseau
+
+#include  <SoftwareSerial.h> 
+
+SoftwareSerial tcpip(6,7);
+
+  // fonction qui filtre le bruit
+  float Single_Point_DFT(int16_t inputArray[], int startingIndex, int endingIndex){
+  float RealSum = 0;
+  
+  for (int n = 0; n <= endingIndex - startingIndex; n++){
+    RealSum += inputArray[startingIndex + n]; 
+  	}
+
+  return abs(RealSum-90000);
+  }
+
+const int analogInPin = A0;
+
+void setup(){
+ 
+ Serial.begin(38400);  
+  
+tcpip.begin(38400);//definir la meme baude sur la carte wifi(configuration)
+
+}
+
+void loop(){
+
+   // echantillon de 128 valeurs 
+
+   int16_t values[128];
+
+   while(1){ 
+
+      for(uint8_t n = 0; n<128; n++){
+        values[n] = analogRead(analogInPin);
+      }
+
+      float result = Single_Point_DFT(values, 0, 127);   
+      
+      // envoi par tcpip du resultat 
+      tcpip.println(result);
+     
+      //vider le cach      
+      tcpip.flush();
+
+  }
+
+}
